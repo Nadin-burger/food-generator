@@ -88,13 +88,19 @@ def clean(dish: str) -> bool:
     return not any(k in dish for k in BANNED)
 
 
-def pick(cuisine=None):
+def pick(cuisine=None, used=None):
     names = [cuisine] if cuisine else list(DISHES)
-    while True:
+    for _ in range(80):
         c = random.choice(names)
-        pool = [d for d in DISHES[c] if clean(d)]
+        pool = [d for d in DISHES[c]
+                if clean(d) and (used is None or (c, d) not in used)]
         if pool:
             return c, random.choice(pool)
+    # 这一轮全抽过了，清空重来
+    if used is not None:
+        used.clear()
+        return pick(cuisine, used)
+    return random.choice(names), DISHES[names[0]][0]
 
 
 def main() -> None:
@@ -113,8 +119,10 @@ def main() -> None:
 
     print("美食发生器：按回车来一道，输入 q 退出。\n")
     n = 0
+    used = set()
     while True:
-        c, d = pick(arg)
+        c, d = pick(arg, used)
+        used.add((c, d))
         n += 1
         print(f"  第 {n} 道 · [{c}] {d}")
         cmd = input().strip().lower()
